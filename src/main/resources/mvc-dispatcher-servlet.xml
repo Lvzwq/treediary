@@ -1,0 +1,39 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <import resource="applicationContext-service.xml"/>
+
+    <mvc:annotation-driven/>
+    <tx:annotation-driven/>
+
+    <!-- 开启 Spring MVC的注解驱动 -->
+    <context:annotation-config/>
+
+    <mvc:annotation-driven>
+        <!--格式化json, 在Spring4.1中使用-->
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter"/>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"/>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/pages/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+    <bean id="responseService" class="net.bingyan.treediary.helper.ResponseService">
+        <property name="code" value="-1" />
+        <property name="data" value="The Api works Well" />
+        <property name="status" value="failure" />
+    </bean>
+
+    <!--扫描对应的包，自动生成对应的Spring bean-->
+    <context:component-scan base-package="net.bingyan.treediary.controllers"/>
+</beans>

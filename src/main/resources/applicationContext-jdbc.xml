@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+       <!-- 数据源配置数据库 -->
+       <bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource">
+              <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+              <property name="url" value="jdbc:mysql://localhost:3306/treediary?characterEncoding=UTF-8"/>
+              <property name="username" value="sa"/>
+              <property name="password" value="root"/>
+              <property name="initialSize" value="5"/>
+              <property name="maxTotal" value="30"/>
+       </bean>
+
+       <!--配置hibernate的SessionFactory实例， 通过Spring提供的LocalSessionFactoryBean 进行配置-->
+       <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+              <property name="dataSource" ref="dataSource"/>
+              <!--自动扫描实体类-->
+              <property name="packagesToScan" value="net.bingyan.treediary.entity"/>
+              <property name="hibernateProperties">
+                     <!-- hibernate.cfg.xml中的配置项-->
+                     <props>
+                            <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+                            <prop key="hibernate.show_sql">true</prop>
+                            <prop key="hibernate.format_sql">true</prop>
+                            <prop key="hibernate.use_sql_comments">false</prop>
+                            <prop key="hibernate.cache.use_second_level_cache">false</prop>
+                            <prop key="hibernate.connection.url">jdbc:mysql://localhost:3306/treediary</prop>
+                            <prop key="hibernate.connection.driver_class">com.mysql.jdbc.Driver</prop>
+                            <prop key="hibernate.hbm2ddl.auto">update</prop>
+                            <prop key="hibernate.current_session_context_class">thread</prop>
+                     </props>
+              </property>
+       </bean>
+
+       <!--注解方式配置事物-->
+       <!--<tx:annotation-driven transaction-manager="transactionManager"/>-->
+       <!--定义事务管理器-->
+       <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+              <property name="sessionFactory" ref="sessionFactory"/>
+       </bean>
+
+       <!-- 拦截器方式配置事物 -->
+       <tx:advice id="transactionAdvice" transaction-manager="transactionManager">
+              <tx:attributes>
+                     <tx:method name="add*" />
+                     <!-- save这里设置了事务回滚的异常，不用抛RuntimeException异常，抛出SQLException也可以回滚-->
+                     <!--<tx:method name="save*" rollback-for="SQLException"/>-->
+                     <tx:method name="update*" />
+                     <tx:method name="modify*" />
+                     <tx:method name="edit*" />
+                     <tx:method name="delete*" />
+                     <tx:method name="remove*" />
+                     <tx:method name="repair" />
+                     <tx:method name="get*" propagation="SUPPORTS" />
+                     <tx:method name="find*" propagation="SUPPORTS" />
+                     <tx:method name="load*" propagation="SUPPORTS" />
+                     <tx:method name="search*" propagation="SUPPORTS" />
+                     <tx:method name="*" propagation="SUPPORTS" />
+              </tx:attributes>
+       </tx:advice>
+
+       <!-- 定义切面，执行有关的hibernate session的事务操作 -->
+       <aop:config>
+              <aop:pointcut id="serviceOperation" expression="execution(* net.bingyan.treediary.service.impl.*Impl.*(..))" />
+              <aop:advisor advice-ref="transactionAdvice" pointcut-ref="serviceOperation" />
+       </aop:config>
+
+
+</beans>
